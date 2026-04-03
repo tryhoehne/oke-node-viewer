@@ -1,4 +1,6 @@
 .idea
 /eks-node-viewer
+/oke-node-viewer
+/monitui
 coverage.out
 /dist
