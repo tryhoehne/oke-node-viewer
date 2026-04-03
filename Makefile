@@ -10,7 +10,7 @@ help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[33m%-20s\033[0m %s\n", $$1, $$2}'
 
 build: generate ## Build
-	go build -ldflags="-s -w -X main.version=local -X main.builtBy=Makefile" ./cmd/eks-node-viewer
+	go build -ldflags="-s -w -X main.version=local -X main.builtBy=Makefile" ./cmd/oke-node-viewer
 
 goreleaser: ## Release snapshot
 	goreleaser build --snapshot --clean
@@ -40,16 +40,10 @@ generate: ## Generate attribution
 	go generate ./...
 	./hack/gen_licenses.sh
 	go generate ./...
-	curl https://raw.githubusercontent.com/aws/karpenter-provider-aws/main/pkg/providers/pricing/zz_generated.pricing_aws.go > ./pkg/aws/zz_generated_aws.pricing.go
-	curl https://raw.githubusercontent.com/aws/karpenter-provider-aws/main/pkg/providers/pricing/zz_generated.pricing_aws_cn.go > ./pkg/aws/zz_generated_aws_cn.pricing.go
-	curl https://raw.githubusercontent.com/aws/karpenter-provider-aws/main/pkg/providers/pricing/zz_generated.pricing_aws_us_gov.go > ./pkg/aws/zz_generated_aws_us_gov.pricing.go
-	sed -i'.bkup' 's/package pricing/package aws/' pkg/aws/zz_generated*
-	rm -f pkg/aws/*.bkup
 
 clean: ## Clean artifacts
-	rm -rf eks-node-viewer
+	rm -rf oke-node-viewer
 	rm -rf dist/
 
 test:
 	go test -v $(TEST_PKGS)
-

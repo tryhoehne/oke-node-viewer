@@ -17,10 +17,10 @@ package model
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"sync"
 	"time"
 
-	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/duration"
@@ -28,7 +28,7 @@ import (
 )
 
 var (
-	instanceIDRegex = regexp.MustCompile(`aws:///(?P<AZ>.*)/(?P<InstanceID>.*)`)
+	resourceLabelRe = regexp.MustCompile("(?:eks-node-viewer|oke-node-viewer)/node-(.*?)-usage")
 )
 
 type objectKey struct {
@@ -77,21 +77,20 @@ func NewNodeFromNodeClaim(nc *karpv1.NodeClaim) *Node {
 }
 
 func (n *Node) IsOnDemand() bool {
-	return n.node.Labels["karpenter.sh/capacity-type"] == "on-demand" ||
-		n.node.Labels["eks.amazonaws.com/capacityType"] == "ON_DEMAND"
+	return n.node.Labels["karpenter.sh/capacity-type"] == "on-demand"
 }
 
 func (n *Node) IsSpot() bool {
 	return n.node.Labels["karpenter.sh/capacity-type"] == "spot" ||
-		n.node.Labels["eks.amazonaws.com/capacityType"] == "SPOT"
+		n.node.Labels["node.kubernetes.io/lifecycle"] == "spot"
 }
 
 func (n *Node) IsFargate() bool {
-	return n.node.Labels["eks.amazonaws.com/compute-type"] == "fargate"
+	return n.node.Labels["compute-type"] == "fargate"
 }
 
 func (n *Node) IsAuto() bool {
-	return n.node.Labels["eks.amazonaws.com/compute-type"] == "auto"
+	return n.node.Labels["compute-type"] == "auto"
 }
 
 func (n *Node) Labels() map[string]string {
@@ -121,13 +120,13 @@ func (n *Node) ProviderID() string {
 
 func (n *Node) InstanceID() string {
 	providerID := n.ProviderID()
-	matches := instanceIDRegex.FindStringSubmatch(providerID)
-	if matches == nil {
-		return providerID
+	if providerID == "" {
+		return ""
 	}
-	for i, name := range instanceIDRegex.SubexpNames() {
-		if name == "InstanceID" {
-			return matches[i]
+	parts := strings.Split(providerID, "/")
+	for i := len(parts) - 1; i >= 0; i-- {
+		if parts[i] != "" {
+			return parts[i]
 		}
 	}
 	return providerID
@@ -226,19 +225,19 @@ func (n *Node) Created() time.Time {
 	return n.node.CreationTimestamp.Time
 }
 
-func (n *Node) InstanceType() ec2types.InstanceType {
+func (n *Node) InstanceType() string {
 	n.mu.RLock()
 	defer n.mu.RUnlock()
 	if n.IsFargate() {
 		if len(n.Pods()) == 1 {
 			cpu, mem, ok := n.Pods()[0].FargateCapacityProvisioned()
 			if ok {
-				return ec2types.InstanceType(fmt.Sprintf("%gvCPU-%gGB", cpu, mem))
+				return fmt.Sprintf("%gvCPU-%gGB", cpu, mem)
 			}
 		}
 		return "Fargate"
 	}
-	return ec2types.InstanceType(n.node.Labels[v1.LabelInstanceTypeStable])
+	return n.node.Labels[v1.LabelInstanceTypeStable]
 }
 
 func (n *Node) Zone() string {
@@ -289,12 +288,10 @@ func (n *Node) HasPrice() bool {
 	return n.Price == n.Price
 }
 
-var resourceLabelRe = regexp.MustCompile("eks-node-viewer/node-(.*?)-usage")
-
 // ComputeLabel computes dynamic labels
 func (n *Node) ComputeLabel(labelName string) string {
 	switch labelName {
-	case "eks-node-viewer/node-age":
+	case "eks-node-viewer/node-age", "oke-node-viewer/node-age":
 		return duration.HumanDuration(time.Since(n.Created()))
 	}
 	// resource based custom labels

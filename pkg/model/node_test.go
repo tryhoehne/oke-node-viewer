@@ -20,7 +20,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/awslabs/eks-node-viewer/pkg/model"
+	"github.com/treyhoehne/oke-node-viewer/pkg/model"
 )
 
 func testNode(name string) *v1.Node {
@@ -56,8 +56,7 @@ func TestNodeTypeUnknown(t *testing.T) {
 
 func TestNodeTypeOnDemand(t *testing.T) {
 	for label, value := range map[string]string{
-		"karpenter.sh/capacity-type":     "on-demand",
-		"eks.amazonaws.com/capacityType": "ON_DEMAND",
+		"karpenter.sh/capacity-type": "on-demand",
 	} {
 		n := testNode("mynode")
 		n.Labels = map[string]string{
@@ -79,7 +78,7 @@ func TestNodeTypeOnDemand(t *testing.T) {
 func TestNodeTypeSpot(t *testing.T) {
 	for label, value := range map[string]string{
 		"karpenter.sh/capacity-type":     "spot",
-		"eks.amazonaws.com/capacityType": "SPOT",
+		"node.kubernetes.io/lifecycle":   "spot",
 	} {
 		n := testNode("mynode")
 		n.Labels = map[string]string{
@@ -100,7 +99,7 @@ func TestNodeTypeSpot(t *testing.T) {
 
 func TestNodeTypeFargate(t *testing.T) {
 	for label, value := range map[string]string{
-		"eks.amazonaws.com/compute-type": "fargate",
+		"compute-type": "fargate",
 	} {
 		n := testNode("mynode")
 		n.Labels = map[string]string{
@@ -121,7 +120,7 @@ func TestNodeTypeFargate(t *testing.T) {
 
 func TestNodeTypeAuto(t *testing.T) {
 	for label, value := range map[string]string{
-		"eks.amazonaws.com/compute-type": "auto",
+		"compute-type": "auto",
 	} {
 		n := testNode("mynode")
 		n.Labels = map[string]string{

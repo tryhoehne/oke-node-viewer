@@ -19,7 +19,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
-	"github.com/awslabs/eks-node-viewer/pkg/model"
+	"github.com/treyhoehne/oke-node-viewer/pkg/model"
 )
 
 func TestClusterAddNode(t *testing.T) {

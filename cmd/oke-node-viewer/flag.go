@@ -37,7 +37,7 @@ var (
 
 func init() {
 	homeDir = homedir.HomeDir()
-	configPath = filepath.Join(homeDir, ".eks-node-viewer")
+	configPath = filepath.Join(homeDir, ".oke-node-viewer")
 }
 
 type Flags struct {
@@ -48,6 +48,7 @@ type Flags struct {
 	Style           string
 	Kubeconfig      string
 	Resources       string
+	PricingFile     string
 	DisablePricing  bool
 	ShowAttribution bool
 	Version         bool
@@ -62,8 +63,8 @@ func ParseFlags() (Flags, error) {
 		return Flags{}, fmt.Errorf("load config file: %w", err)
 	}
 
-	flagSet.BoolVar(&flags.Version, "v", false, "Display eks-node-viewer version")
-	flagSet.BoolVar(&flags.Version, "version", false, "Display eks-node-viewer version")
+	flagSet.BoolVar(&flags.Version, "v", false, "Display oke-node-viewer version")
+	flagSet.BoolVar(&flags.Version, "version", false, "Display oke-node-viewer version")
 
 	contextDefault := cfg.getValue("context", "")
 	flagSet.StringVar(&flags.Context, "context", contextDefault, "Name of the kubernetes context to use")
@@ -86,6 +87,9 @@ func ParseFlags() (Flags, error) {
 
 	resourcesDefault := cfg.getValue("resources", "cpu")
 	flagSet.StringVar(&flags.Resources, "resources", resourcesDefault, "List of comma separated resources to monitor")
+
+	pricingFileDefault := cfg.getValue("pricing-file", "")
+	flagSet.StringVar(&flags.PricingFile, "pricing-file", pricingFileDefault, "Path to a JSON file containing static prices by instance type")
 
 	disablePricingDefault := cfg.getBoolValue("disable-pricing", false)
 	flagSet.BoolVar(&flags.DisablePricing, "disable-pricing", disablePricingDefault, "Disable pricing lookups")
