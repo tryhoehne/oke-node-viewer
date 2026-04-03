@@ -33,7 +33,7 @@ type Data struct {
 }
 
 // Example Usage:
-// go run hack/homebrew.go --version 0.6.0 > ../aws-homebrew-tap/bottle-configs/eks-node-viewer.json
+// go run hack/homebrew.go --version 0.6.0 > ../homebrew-tap/bottle-configs/oke-node-viewer.json
 
 func main() {
 	var data Data
@@ -44,11 +44,11 @@ func main() {
 	}
 
 	bconfig, err := template.New("bottle-config").Parse(`{
-    "name": "eks-node-viewer",
+    "name": "oke-node-viewer",
     "version": "{{.Version}}",
-    "bin": "eks-node-viewer",
+    "bin": "oke-node-viewer",
     "bottle": {
-        "root_url": "https://github.com/awslabs/eks-node-viewer/releases/download/v{{.Version}}/eks-node-viewer",
+        "root_url": "https://github.com/tryhoehne/oke-node-viewer/releases/download/v{{.Version}}/oke-node-viewer",
         "sha256": {
             "sierra": "{{.DarwinAll}}",
             "linux": "{{.LinuxX64}}",
@@ -62,7 +62,7 @@ func main() {
 	}
 
 	// fetch and parse the checksums
-	req, err := http.Get(fmt.Sprintf(`https://github.com/awslabs/eks-node-viewer/releases/download/v%s/eks-node-viewer_%s_sha256_checksums.txt`, data.Version, data.Version))
+	req, err := http.Get(fmt.Sprintf(`https://github.com/tryhoehne/oke-node-viewer/releases/download/v%s/oke-node-viewer_%s_sha256_checksums.txt`, data.Version, data.Version))
 	if err != nil {
 		log.Fatalf("fetching checksums, %s", err)
 	}
@@ -76,13 +76,13 @@ func main() {
 		hash := fields[0]
 		bin := fields[1]
 		switch bin {
-		case "eks-node-viewer_Darwin_all":
+		case "oke-node-viewer_Darwin_all":
 			data.DarwinAll = hash
-		case "eks-node-viewer_Linux_arm64":
+		case "oke-node-viewer_Linux_arm64":
 			data.LinuxArm = hash
-		case "eks-node-viewer_Linux_x86_64":
+		case "oke-node-viewer_Linux_x86_64":
 			data.LinuxX64 = hash
-		case "eks-node-viewer_Windows_x86_64.exe":
+		case "oke-node-viewer_Windows_x86_64.exe":
 			data.WindowsX64 = hash
 		default:
 			log.Fatalf("unsupported bin, %s", bin)

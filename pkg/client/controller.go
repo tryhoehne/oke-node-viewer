@@ -200,13 +200,6 @@ func (m Controller) updatePrice(node *model.Node) {
 			return
 		}
 	}
-	// Backward-compatibility with legacy label name.
-	if val, ok := node.Labels()["eks-node-viewer/instance-price"]; ok {
-		if price, err := strconv.ParseFloat(val, 64); err == nil {
-			node.SetPrice(price)
-			return
-		}
-	}
 	// lookup our n price
 	node.Price = math.NaN()
 	if price, ok := m.pricing.NodePrice(node); ok {

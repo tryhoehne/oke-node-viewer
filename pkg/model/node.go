@@ -28,7 +28,7 @@ import (
 )
 
 var (
-	resourceLabelRe = regexp.MustCompile("(?:eks-node-viewer|oke-node-viewer)/node-(.*?)-usage")
+	resourceLabelRe = regexp.MustCompile("oke-node-viewer/node-(.*?)-usage")
 )
 
 type objectKey struct {
@@ -291,7 +291,7 @@ func (n *Node) HasPrice() bool {
 // ComputeLabel computes dynamic labels
 func (n *Node) ComputeLabel(labelName string) string {
 	switch labelName {
-	case "eks-node-viewer/node-age", "oke-node-viewer/node-age":
+	case "oke-node-viewer/node-age":
 		return duration.HumanDuration(time.Since(n.Created()))
 	}
 	// resource based custom labels

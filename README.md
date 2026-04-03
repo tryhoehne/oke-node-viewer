@@ -45,10 +45,6 @@ You can also set per-node override labels:
 
 - `oke-node-viewer/instance-price`
 
-Legacy override is still accepted:
-
-- `eks-node-viewer/instance-price`
-
 ## Config file
 
 Defaults can be set in:
