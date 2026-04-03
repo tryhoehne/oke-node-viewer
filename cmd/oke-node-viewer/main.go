@@ -23,13 +23,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/config"
 	tea "github.com/charmbracelet/bubbletea"
 	"k8s.io/apimachinery/pkg/labels"
 
-	"github.com/awslabs/eks-node-viewer/pkg/aws"
-	"github.com/awslabs/eks-node-viewer/pkg/client"
-	"github.com/awslabs/eks-node-viewer/pkg/model"
+	"github.com/treyhoehne/oke-node-viewer/pkg/client"
+	"github.com/treyhoehne/oke-node-viewer/pkg/model"
+	"github.com/treyhoehne/oke-node-viewer/pkg/pricing"
 )
 
 //go:generate cp -r ../../ATTRIBUTION.md ./
@@ -51,7 +50,7 @@ func main() {
 	}
 
 	if flags.Version {
-		fmt.Printf("eks-node-viewer version %s\n", version)
+		fmt.Printf("oke-node-viewer version %s\n", version)
 		fmt.Printf("commit: %s\n", commit)
 		fmt.Printf("built at: %s\n", date)
 		fmt.Printf("built by: %s\n", builtBy)
@@ -68,7 +67,7 @@ func main() {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 
-	pprov := aws.NewStaticPricingProvider()
+	pprov := pricing.NewStaticPricingProvider(flags.PricingFile)
 	style, err := model.ParseStyle(flags.Style)
 	if err != nil {
 		log.Fatalf("creating style, %s", err)
@@ -84,14 +83,6 @@ func main() {
 		nodeSelector = ns
 	}
 
-	if !flags.DisablePricing {
-		// Use AWS SDK Go v2 for configuration
-		cfg, err := config.LoadDefaultConfig(ctx, config.WithSharedConfigProfile(""))
-		if err != nil {
-			log.Fatalf("unable to load AWS SDK config: %s", err)
-		}
-		pprov = aws.NewPricingProvider(ctx, cfg)
-	}
 	controller := client.NewController(cs, nodeClaimClient, m, nodeSelector, pprov)
 
 	controller.Start(ctx)

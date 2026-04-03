@@ -1,4 +1,4 @@
-project_name: eks-node-viewer
+project_name: oke-node-viewer
 version: 2
 
 source:
@@ -9,8 +9,8 @@ before:
     - go mod download
 
 builds:
-  - binary: eks-node-viewer
-    main: ./cmd/eks-node-viewer
+  - binary: oke-node-viewer
+    main: ./cmd/oke-node-viewer
     targets:
       - linux_amd64
       - linux_arm64
@@ -26,7 +26,7 @@ universal_binaries:
  - replace: true
 
 archives:
-  - id: eks-node-viewer
+  - id: oke-node-viewer
     name_template: >-
       {{ .ProjectName }}_
       {{- title .Os }}_

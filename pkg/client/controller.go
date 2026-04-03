@@ -28,8 +28,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 	karpv1 "sigs.k8s.io/karpenter/pkg/apis/v1"
 
-	"github.com/awslabs/eks-node-viewer/pkg/model"
-	"github.com/awslabs/eks-node-viewer/pkg/pricing"
+	"github.com/treyhoehne/oke-node-viewer/pkg/model"
+	"github.com/treyhoehne/oke-node-viewer/pkg/pricing"
 )
 
 type Controller struct {
@@ -194,6 +194,13 @@ func (m Controller) startPodWatch(ctx context.Context, cluster *model.Cluster) {
 func (m Controller) updatePrice(node *model.Node) {
 	// If the node has the instance-price override label, don't look up pricing
 	// and use the value here.
+	if val, ok := node.Labels()["oke-node-viewer/instance-price"]; ok {
+		if price, err := strconv.ParseFloat(val, 64); err == nil {
+			node.SetPrice(price)
+			return
+		}
+	}
+	// Backward-compatibility with legacy label name.
 	if val, ok := node.Labels()["eks-node-viewer/instance-price"]; ok {
 		if price, err := strconv.ParseFloat(val, 64); err == nil {
 			node.SetPrice(price)

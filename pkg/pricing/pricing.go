@@ -14,7 +14,7 @@ limitations under the License.
 
 package pricing
 
-import "github.com/awslabs/eks-node-viewer/pkg/model"
+import "github.com/treyhoehne/oke-node-viewer/pkg/model"
 
 // Provider provides node prices for display in the node viewer
 type Provider interface {
