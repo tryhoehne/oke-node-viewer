@@ -1,4 +1,4 @@
-.PHONY: help clean verify boilerplate licenses download coverage generate test
+.PHONY: help clean verify boilerplate licenses download coverage generate test pricing-update
 
 NO_COLOR=\033[0m
 GREEN=\033[32;01m
@@ -47,3 +47,6 @@ clean: ## Clean artifacts
 
 test:
 	go test -v $(TEST_PKGS)
+
+pricing-update: ## Refresh static prices from OCI list-pricing API
+	go run ./hack/fetch_oci_pricing.go --mapping ./pkg/pricing/oci_part_numbers.json --out ./pkg/pricing/static_prices.json

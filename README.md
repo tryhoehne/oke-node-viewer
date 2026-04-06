@@ -25,6 +25,8 @@ make build
 By default, the binary embeds a static pricing map at:
 
 - `pkg/pricing/static_prices.json`
+- You can refresh this file from OCI list pricing with `make pricing-update`
+- Update `pkg/pricing/oci_part_numbers.json` with valid OCI part numbers first
 
 You can provide your own file:
 
@@ -60,4 +62,25 @@ extra-labels=topology.kubernetes.io/zone,karpenter.sh/nodepool
 node-sort=creation=asc
 style=#2E91D2,#ffff00,#D55E00
 pricing-file=/path/to/prices.json
+```
+
+## Refreshing Prices From OCI
+
+The repository includes `hack/fetch_oci_pricing.go`, which calls OCI list pricing and writes `pkg/pricing/static_prices.json`.
+
+1. Populate `pkg/pricing/oci_part_numbers.json` with real `shape -> partNumber` values.
+2. Run:
+
+```bash
+make pricing-update
+```
+
+You can also run the script directly:
+
+```bash
+go run ./hack/fetch_oci_pricing.go \
+  --endpoint https://apexapps.oracle.com/pls/apex/cetools/api/v1/products/ \
+  --currency USD \
+  --mapping ./pkg/pricing/oci_part_numbers.json \
+  --out ./pkg/pricing/static_prices.json
 ```
