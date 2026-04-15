@@ -1,6 +1,5 @@
 {
-  "VM.Standard.E4.Flex": 0.08,
-  "VM.Standard.E5.Flex": 0.09,
-  "VM.Standard3.Flex": 0.075,
-  "VM.Optimized3.Flex": 0.11
+  "VM.Standard.E3.Flex": 0.025,
+  "VM.Standard.E4.Flex": 0.025,
+  "VM.Standard.E5.Flex": 0.03
 }

@@ -28,6 +28,30 @@ By default, the binary embeds a static pricing map at:
 - You can refresh this file from OCI list pricing with `make pricing-update`
 - Update `pkg/pricing/oci_part_numbers.json` with valid OCI part numbers first
 
+### OCI Flex Pricing Notes
+
+For OCI Flex shapes, Oracle pricing is exposed as separate line items:
+
+- OCPU hourly price
+- Memory (GB) hourly price
+
+There is typically not a single all-in hourly SKU per Flex shape in the list-pricing feed.
+For accurate per-node pricing, compute:
+
+`hourly = (ocpus * ocpu_rate) + (memory_gb * memory_rate)`
+
+and provide the final prices via `--pricing-file` keyed by the exact Kubernetes instance-type
+label (for example `VM.Standard.E3.Flex.4o.16g.1_1b`).
+
+### About `make pricing-update`
+
+`make pricing-update` uses `hack/fetch_oci_pricing.go`, which currently expects a single
+`shape -> partNumber` mapping entry and writes one static price per key. That is best treated
+as a convenience workflow for simple/static mappings.
+
+For Flex shape accuracy, prefer generating a per-permutation pricing file and passing it with
+`--pricing-file`.
+
 You can provide your own file:
 
 ```bash
@@ -40,6 +64,25 @@ File format:
 {
   "VM.Standard.E4.Flex": 0.08,
   "VM.Standard.E5.Flex": 0.09
+}
+```
+
+Per-permutation example (recommended for Flex):
+
+```json
+{
+  "VM.Standard.E3.Flex.1o.4g.1_1b": 0.031,
+  "VM.Standard.E3.Flex.2o.8g.1_1b": 0.062,
+  "VM.Standard.E3.Flex.4o.16g.1_1b": 0.124,
+  "VM.Standard.E3.Flex.8o.32g.1_1b": 0.248,
+  "VM.Standard.E4.Flex.1o.4g.1_1b": 0.031,
+  "VM.Standard.E4.Flex.2o.8g.1_1b": 0.062,
+  "VM.Standard.E4.Flex.4o.16g.1_1b": 0.124,
+  "VM.Standard.E4.Flex.8o.32g.1_1b": 0.248,
+  "VM.Standard.E5.Flex.1o.4g.1_1b": 0.038,
+  "VM.Standard.E5.Flex.2o.8g.1_1b": 0.076,
+  "VM.Standard.E5.Flex.4o.16g.1_1b": 0.152,
+  "VM.Standard.E5.Flex.8o.32g.1_1b": 0.304
 }
 ```
 

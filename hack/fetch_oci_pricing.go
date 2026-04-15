@@ -28,10 +28,18 @@ func main() {
 
 	flag.StringVar(&endpoint, "endpoint", "https://apexapps.oracle.com/pls/apex/cetools/api/v1/products/", "OCI list-pricing endpoint")
 	flag.StringVar(&currency, "currency", "USD", "Currency code for pricing query")
-	flag.StringVar(&mappingPath, "mapping", "pkg/pricing/oci_part_numbers.json", "JSON file mapping shape -> OCI part number")
+	flag.StringVar(&mappingPath, "mapping", "pkg/pricing/oci_part_numbers.json", "JSON file mapping shape (or exact instance-type key) -> OCI part number")
 	flag.StringVar(&outPath, "out", "pkg/pricing/static_prices.json", "Output JSON file for static prices")
 	flag.StringVar(&modelContains, "model-contains", "hour", "Filter pricing model text by substring, empty to disable")
 	flag.Parse()
+
+	// Note:
+	// OCI Flex pricing is usually published as separate OCPU and memory items.
+	// This helper fetches one numeric value per mapping key, so for high-fidelity
+	// Flex pricing prefer generating a per-instance-type pricing file where each
+	// value is precomputed as:
+	//   hourly = (ocpus * ocpu_rate) + (memory_gb * memory_rate)
+	// and pass it to the viewer via --pricing-file.
 
 	mappingBytes, err := os.ReadFile(mappingPath)
 	if err != nil {
@@ -119,6 +127,12 @@ func fetchPrice(client *http.Client, endpoint, currency, partNumber, modelContai
 
 	modelContains = strings.ToLower(strings.TrimSpace(modelContains))
 	for _, item := range parsed.Items {
+		// Current OCI API layout: currencyCodeLocalizations[].prices[].{model,value}
+		if value, ok := getNestedLocalizedPrice(item, currency, modelContains); ok {
+			return value, nil
+		}
+
+		// Legacy/fallback format checks.
 		model := strings.ToLower(getString(item, "model"))
 		if modelContains != "" && !strings.Contains(model, modelContains) {
 			continue
@@ -134,6 +148,63 @@ func fetchPrice(client *http.Client, endpoint, currency, partNumber, modelContai
 		}
 	}
 	return 0, fmt.Errorf("no numeric value found in pricing items")
+}
+
+func getNestedLocalizedPrice(item map[string]any, currency, modelContains string) (float64, bool) {
+	rawLoc, ok := item["currencyCodeLocalizations"]
+	if !ok || rawLoc == nil {
+		return 0, false
+	}
+	locs, ok := rawLoc.([]any)
+	if !ok {
+		return 0, false
+	}
+
+	for _, locRaw := range locs {
+		loc, ok := locRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+		if c := strings.ToUpper(getString(loc, "currencyCode")); c != "" && c != strings.ToUpper(currency) {
+			continue
+		}
+		rawPrices, ok := loc["prices"]
+		if !ok || rawPrices == nil {
+			continue
+		}
+		prices, ok := rawPrices.([]any)
+		if !ok {
+			continue
+		}
+
+		// Prefer entries that match modelContains.
+		for _, prRaw := range prices {
+			pr, ok := prRaw.(map[string]any)
+			if !ok {
+				continue
+			}
+			model := strings.ToLower(getString(pr, "model"))
+			if modelContains != "" && !strings.Contains(model, modelContains) {
+				continue
+			}
+			if v, ok := getFloat(pr, "value"); ok {
+				return v, true
+			}
+		}
+
+		// Fallback: first numeric price in this localization.
+		for _, prRaw := range prices {
+			pr, ok := prRaw.(map[string]any)
+			if !ok {
+				continue
+			}
+			if v, ok := getFloat(pr, "value"); ok {
+				return v, true
+			}
+		}
+	}
+
+	return 0, false
 }
 
 func getString(m map[string]any, key string) string {

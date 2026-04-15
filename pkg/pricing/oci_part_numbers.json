@@ -1,6 +1,5 @@
 {
-  "VM.Standard.E4.Flex": "REPLACE_WITH_OCI_PART_NUMBER",
-  "VM.Standard.E5.Flex": "REPLACE_WITH_OCI_PART_NUMBER",
-  "VM.Standard3.Flex": "REPLACE_WITH_OCI_PART_NUMBER",
-  "VM.Optimized3.Flex": "REPLACE_WITH_OCI_PART_NUMBER"
+  "VM.Standard.E3.Flex": "B92306",
+  "VM.Standard.E4.Flex": "B93113",
+  "VM.Standard.E5.Flex": "B97384"
 }
