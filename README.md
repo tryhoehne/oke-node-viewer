@@ -26,6 +26,7 @@ By default, the binary embeds a static pricing map at:
 
 - `pkg/pricing/static_prices.json`
 - You can refresh this file from OCI list pricing with `make pricing-update`
+- You can refresh this file from KPO shape metadata with `make pricing-update-shape-meta`
 - Update `pkg/pricing/oci_part_numbers.json` with valid OCI part numbers first
 
 ### OCI Flex Pricing Notes
@@ -51,6 +52,16 @@ as a convenience workflow for simple/static mappings.
 
 For Flex shape accuracy, prefer generating a per-permutation pricing file and passing it with
 `--pricing-file`.
+
+Recommended workflow when you have the local KPO repo:
+
+```bash
+make pricing-update-shape-meta
+```
+
+By default this reads `~/karpenter-provider-oci/chart/config/oci-shape-meta.json` and computes Flex prices as:
+
+`hourly = (ocpus * ocpuUnitPrice) + (memory_gb * memoryUnitPrice)`
 
 You can provide your own file:
 
@@ -127,3 +138,14 @@ go run ./hack/fetch_oci_pricing.go \
   --mapping ./pkg/pricing/oci_part_numbers.json \
   --out ./pkg/pricing/static_prices.json
 ```
+
+For shape-meta generation:
+
+```bash
+go run ./hack/generate_oci_flex_prices_from_shape_meta.go \
+  --shapes VM.Standard.E3.Flex,VM.Standard.E4.Flex,VM.Standard.E5.Flex \
+  --combos 1:4,2:8,4:16,8:32 \
+  --out ./pkg/pricing/static_prices.json
+```
+
+If your KPO repo is somewhere else, pass `--shape-meta <path>`.

@@ -1,4 +1,4 @@
-.PHONY: help clean verify boilerplate licenses download coverage generate test pricing-update
+.PHONY: help clean verify boilerplate licenses download coverage generate test pricing-update pricing-update-shape-meta
 
 NO_COLOR=\033[0m
 GREEN=\033[32;01m
@@ -50,3 +50,7 @@ test:
 
 pricing-update: ## Refresh static prices from OCI list-pricing API
 	go run ./hack/fetch_oci_pricing.go --mapping ./pkg/pricing/oci_part_numbers.json --out ./pkg/pricing/static_prices.json
+
+pricing-update-shape-meta: ## Refresh static prices from KPO oci-shape-meta.json (Flex unit-rate derived)
+	go run ./hack/generate_oci_flex_prices_from_shape_meta.go \
+		--out ./pkg/pricing/static_prices.json
